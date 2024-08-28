@@ -18,7 +18,6 @@ import (
 	"log"
 
 	"github.com/GoogleCloudPlatform/terraformer/terraformutils"
-	"gopkg.in/auth0.v5"
 	"gopkg.in/auth0.v5/management"
 )
 
@@ -27,26 +26,15 @@ type Auth0Service struct { //nolint
 }
 
 func (s *Auth0Service) generateClient() *management.Management {
-	m, err := management.New(
-		s.Args["domain"].(string),
-		management.WithClientCredentials(
-			s.Args["client_id"].(string),
-			s.Args["client_secret"].(string),
-		),
+	authenticationOption := management.WithClientCredentials(s.Args["client_id"].(string), s.Args["client_secret"].(string))
+
+	apiClient, err := management.New(s.Args["domain"].(string),
+		authenticationOption,
+		management.WithDebug(false),
 	)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 
-	c := &management.Client{
-		Name:        auth0.String("Auth0 Management Client"),
-		Description: auth0.String("Client used by Terraformer"),
-	}
-
-	err = m.Client.Create(c)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	return m
+	return apiClient
 }
